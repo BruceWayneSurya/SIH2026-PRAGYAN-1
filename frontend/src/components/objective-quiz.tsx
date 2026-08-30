@@ -37,18 +37,21 @@ export function ObjectiveQuiz({
   pyqPct,
   questions,
   best,
+  classNo = 8,
 }: {
   chapterId: number;
   chapterTitle: string;
   pyqPct: number;
   questions: Q[];
   best: { score: number; total: number } | null;
+  classNo?: number;
 }) {
   const [phase, setPhase] = useState<"intro" | "test" | "result">("intro");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => questions.map(() => null));
   const [timeLeft, setTimeLeft] = useState(TOTAL_SECONDS);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [result, setResult] = useState<{ score: number; total: number; xpEarned: number; firstTime: boolean } | null>(null);
   const startedAt = useRef(0);
@@ -59,6 +62,7 @@ export function ObjectiveQuiz({
   const doSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
     const durationSec = TOTAL_SECONDS - timeLeft;
     try {
       const res = await fetch(`/api/objective/${chapterId}/submit`, {
@@ -66,8 +70,8 @@ export function ObjectiveQuiz({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: answers.map((a) => a ?? -1), durationSec }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Submission failed");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Submission failed. Please try again.");
       setResult({
         score: data.score,
         total: data.total,
@@ -76,6 +80,8 @@ export function ObjectiveQuiz({
       });
       setPhase("result");
       window.scrollTo({ top: 0 });
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Submission failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -186,6 +192,11 @@ export function ObjectiveQuiz({
               <Send className="h-4 w-4" /> Submit
             </button>
           </div>
+          {submitError && (
+            <p role="alert" className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] font-bold text-rose-700">
+              {submitError}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Question palette">
             {questions.map((_, i) => (
               <button
@@ -354,7 +365,7 @@ export function ObjectiveQuiz({
           </div>
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <Link
-              href={`/leaderboard?chapter=${chapterId}`}
+              href={`/leaderboard?class=${classNo}&chapter=${chapterId}`}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-navy-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-navy-700 sm:flex-none"
             >
               <Trophy className="h-4 w-4 text-saffron-400" /> Chapter leaderboard

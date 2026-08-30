@@ -81,13 +81,17 @@ export function SiteHeader() {
                 </span>
               </Link>
             </>
-          ) : (
+          ) : user === null ? (
             <Link
               href="/login"
               className="inline-flex items-center gap-1.5 rounded-md bg-navy-800 px-3.5 py-1.5 text-sm font-bold text-white transition hover:bg-navy-700"
             >
               Sign In
             </Link>
+          ) : (
+            // Still resolving the session — reserve the space to avoid a
+            // flash of the "Sign In" button on every navigation.
+            <span className="h-8 w-20 animate-pulse rounded-md bg-navy-100" aria-hidden="true" />
           )}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHmac } from "crypto";
 import type { Request, Response } from "express";
 import { db } from "../db";
 import { users } from "../db/schema";
