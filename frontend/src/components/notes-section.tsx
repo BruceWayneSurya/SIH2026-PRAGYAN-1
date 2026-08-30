@@ -82,6 +82,8 @@ export function NotesSection({ chapterId, initial, isFaculty }: Props) {
           ),
         ),
       );
+    } catch (e) {
+      setUploadErr(e instanceof Error ? e.message : "Could not update verification.");
     } finally {
       setVerifying(null);
     }

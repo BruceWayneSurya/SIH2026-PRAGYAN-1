@@ -9,7 +9,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { drizzle } from "drizzle-orm/sql-js";
 import initSqlJs, { type Database as SqlJsDatabase } from "sql.js";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { hashPassword } from "../src/auth/password";
 import {
   getChapters,
@@ -370,7 +370,6 @@ export async function seedDemoData(existing?: {
     console.log(`  note sets:    ${Object.keys(notesByChapter).length}`);
     console.log(`  MCQ banks:    ${Object.entries(bankSize).map(([k, v]) => `${k}=${v}`).join(", ")}`);
     console.log(`  attempts:     ${Object.values(ATTEMPTS).reduce((a, b) => a + Object.keys(b).length, 0)} objective, ${SUBJECTIVE_DONE.length} subjective`);
-    void sql;
   } finally {
     if (ownsConnection) sqlite.close();
   }

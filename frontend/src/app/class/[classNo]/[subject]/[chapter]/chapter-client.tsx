@@ -180,6 +180,7 @@ export default function ChapterClient({
                 pyqPct={pyqPct}
                 questions={mcqs}
                 best={best ? { score: best.score, total: best.total } : null}
+                classNo={cn}
               />
             ) : (
               <EmptyState
@@ -195,6 +196,7 @@ export default function ChapterClient({
                 chapterId={ch.id}
                 chapterTitle={`${subjectName(subject)} · ${ch.title}`}
                 questions={subj}
+                classNo={cn}
               />
             ) : (
               <EmptyState
@@ -248,7 +250,7 @@ export default function ChapterClient({
               </ol>
             )}
             <Link
-              href={`/leaderboard?chapter=${ch.id}`}
+              href={`/leaderboard?class=${cn}&chapter=${ch.id}`}
               className="mt-3 block rounded-md bg-navy-800 py-2 text-center text-[13px] font-bold text-white hover:bg-navy-700"
             >
               Full chapter leaderboard

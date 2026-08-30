@@ -5,21 +5,27 @@ import { useEffect, useState } from "react";
  * backend API once (and on dependency changes) and surfaces loading/error/data.
  */
 export function useApiData<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<unknown>(null);
+  // The state is tagged with the deps key it was produced for. While a request
+  // for a *different* parameter set is in flight (e.g. the user navigated to
+  // another chapter), the stale payload is treated as "loading" so callers
+  // never briefly see data belonging to a previous request. No state is reset
+  // synchronously inside the effect — state updates happen only in the async
+  // callbacks below, avoiding cascading renders.
+  const key = deps.map((d) => JSON.stringify(d)).join("|");
+  const [state, setState] = useState<{
+    key: string;
+    data: T | null;
+    error: unknown;
+  }>({ key: null as unknown as string, data: null, error: null });
 
   useEffect(() => {
     let active = true;
-    // State is only updated inside the async callbacks below (never
-    // synchronously in the effect body) to avoid cascading renders. When the
-    // fetched params change across renders, callers force a remount via a
-    // `key` so a fresh instance starts from the loading state.
     fetcher()
       .then((d) => {
-        if (active) setData(d);
+        if (active) setState({ key, data: d, error: null });
       })
       .catch((e) => {
-        if (active) setError(e);
+        if (active) setState({ key, data: null, error: e });
       });
     return () => {
       active = false;
@@ -27,5 +33,10 @@ export function useApiData<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  return { data, error, loading: !data && !error };
+  const fresh = state.key === key;
+  return {
+    data: fresh ? state.data : null,
+    error: fresh ? state.error : null,
+    loading: !fresh || (fresh && !state.data && !state.error),
+  };
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db";
 import { chapters, mcqAttempts, notes, xpEvents } from "../db/schema";
-import { eq, desc, inArray, sql } from "drizzle-orm";
+import { eq, asc, desc, inArray, sql } from "drizzle-orm";
 import { getActiveUser } from "../auth/session";
 import { SUBJECTS } from "../shared/curriculum";
 import {
@@ -39,7 +39,7 @@ router.get("/account", async (req, res) => {
   const user = await getActiveUser(req);
   if (!user) return res.status(401).json({ error: "No session" });
   const [stats, badges] = await Promise.all([
-    getUserStats(user.id, user.className),
+    getUserStats(user.id, user.className ?? 8),
     getBadgesForUser(user.id),
   ]);
   return res.json({ user, stats, badges });
@@ -229,6 +229,13 @@ router.get("/leaderboard", async (req, res) => {
 
   const board = await getClassLeaderboard(classNo);
 
+  // Attach each learner's earned badges to their board row.
+  await Promise.all(
+    board.map(async (r) => {
+      r.badges = await getBadgesForUser(r.id);
+    }),
+  );
+
   const chapterOpts = await db
     .select({
       id: chapters.id,
@@ -239,7 +246,7 @@ router.get("/leaderboard", async (req, res) => {
     .from(mcqAttempts)
     .innerJoin(chapters, eq(mcqAttempts.chapterId, chapters.id))
     .where(inArray(chapters.classNo, [classNo]))
-    .orderBy(chapters.num);
+    .orderBy(asc(chapters.subjectSlug), asc(chapters.num));
   const seen = new Set<number>();
   const opts = chapterOpts.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 

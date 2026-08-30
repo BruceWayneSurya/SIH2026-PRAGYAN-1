@@ -32,10 +32,12 @@ export function SubjectivePractice({
   chapterId,
   chapterTitle,
   questions,
+  classNo = 8,
 }: {
   chapterId: number;
   chapterTitle: string;
   questions: Q[];
+  classNo?: number;
 }) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
@@ -117,7 +119,7 @@ export function SubjectivePractice({
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Link
-            href={`/leaderboard?chapter=${chapterId}`}
+            href={`/leaderboard?class=${classNo}&chapter=${chapterId}`}
             className="inline-flex items-center gap-2 rounded-md bg-navy-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-navy-700"
           >
             <Trophy className="h-4 w-4 text-saffron-400" /> Chapter leaderboard
